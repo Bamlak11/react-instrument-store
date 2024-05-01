@@ -15,37 +15,64 @@ const App = () => {
   ]);
 
   const [cart, setCart] = useState([]);
-
   const [message, setMessage] = useState('');
 
-  const addToCart = (item) =>{
-    setCart([...cart, item]);
-    setMessage(`Added ${item.title} to the cart.`);
-  }
 
+  const addToCart = (item) => {
+    // Check if the item is already in the cart
+    const existingItem = cart.find(cartItem => cartItem.id === item.id);
+  
+    if (existingItem) {
+      // icrement quanity thats in the cart
+      const updatedCart = cart.map(cartItem =>
+        cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem
+      );
+      setCart(updatedCart);
+    } else {
+      setCart([...cart, { ...item, quantity: 1 }]);
+    }
+    setMessage(`Added ${item.title} to the cart.`);
+  };
+  
+// remove crt function
   const removeFromCart = (item) => {
     setCart(cart.filter(cartItem => cartItem.id != item.id));
     setMessage(`Removed ${item.title} from the cart.`);
   };
-
-  const toggleFavorite = (item) => {
-    const updatedItems = instrumentItems.map( InstrumentItem =>
-      InstrumentItem.id === item.id ? {...InstrumentItem, isFavorite: !InstrumentItem.isFavorite} : InstrumentItem
-    );
-    setInstrumentItems(updatedItems);
+// update qty function
+  const updateQuantity = (itemId, action) => {
+    const updatedCart = cart.map((item) => {
+      if (item.id === itemId) {
+        return {
+          ...item,
+          quantity: action === 'increment' ? item.quantity + 1 : item.quantity - 1
+        };
+      }
+      return item;
+    });
+  
+    if (action === 'decrement') {
+      // Remove items with  0 quantity from the cart
+      const filteredCart = updatedCart.filter((item) => item.quantity > 0);
+      setCart(filteredCart);
+    } else {
+      setCart(updatedCart);
+    }
   };
 
 
 
   return (
-    <Router>
+  <Router>
   <div>
     <nav>
       <Link className='navlink' to='/'>Home</Link>
       <Link className='navlink' to='/guitar'>Guitar</Link>
       <Link className='navlink' to='/keyboard'>Keyboard</Link>
       <Link className='navlink' to='/drum'>Drum</Link>
+      <Link className='navlink' to='/cart'>Cart</Link>
     </nav>
+
     <h1>Welcome to the Musical Instrument Store!</h1>
 
     
@@ -56,6 +83,7 @@ const App = () => {
     <Route path='/guitar' element= {<InstrumentList instrumentItems={instrumentItems.filter(item => item.type === 'Guitar')} addToCart={addToCart} removeFromCart={removeFromCart}/>} exact/>
     <Route path="/keyboard" element={<InstrumentList instrumentItems={instrumentItems.filter(item => item.type === 'Keyboard')} addToCart={addToCart} removeFromCart={removeFromCart} />} exact/>
     <Route path="/drum" element={<InstrumentList instrumentItems={instrumentItems.filter(item => item.type === 'Drum')} addToCart={addToCart} removeFromCart={removeFromCart} />} exact/>
+    <Route path="/cart" element={<Cart cart={cart} removeFromCart={removeFromCart} updateQuantity={updateQuantity} />} exact />
     </Routes>
 
   </div>
